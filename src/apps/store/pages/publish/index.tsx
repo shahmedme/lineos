@@ -1,6 +1,8 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
+import { clearPublishPrefill, getPublishPrefill } from "./prefill";
 import { AppSubmissionForm, appSubmissionSchema } from "./types";
 import AppInfo from "./views/AppInfo";
 import Assets from "./views/Assets";
@@ -20,6 +22,21 @@ export default function PublishPage() {
 			screenshots: [],
 		},
 	});
+
+	useEffect(() => {
+		const prefill = getPublishPrefill();
+		if (!prefill) {
+			return;
+		}
+
+		form.reset({
+			...form.getValues(),
+			name: prefill.name,
+			appUrl: prefill.appUrl,
+			icon: prefill.icon,
+		});
+		clearPublishPrefill();
+	}, []);
 
 	return (
 		<FormProvider {...form}>

@@ -175,7 +175,7 @@ export default function Dock({ variant = "macos" }: DockProps) {
 													el.onerror = null;
 													el.src = PlaceholderAppIcon;
 												}}
-												className="h-[55px] w-[55px] select-none object-contain"
+												className="h-[55px] w-[55px] select-none rounded-[22%] object-cover"
 												style={{
 													transform: `translateZ(0) scale(${scale})`,
 													transformOrigin: "left center",

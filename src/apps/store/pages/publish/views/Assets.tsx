@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { TabsContent } from "@/components/ui/tabs";
 import { Upload, X } from "lucide-react";
 import { useFormContext } from "react-hook-form";
+import { isUploadedAssetUrl } from "../prefill";
 import { fileService } from "../../../services/fileService";
 import { useRef, useState } from "react";
 import { message } from "antd";
@@ -104,9 +105,11 @@ export default function Assets() {
 		if (!iconUrl) return;
 
 		try {
-			await fileService.deleteAppIcon(iconUrl);
+			if (isUploadedAssetUrl(iconUrl)) {
+				await fileService.deleteAppIcon(iconUrl);
+			}
 			setValue("icon", "", { shouldDirty: true, shouldValidate: true });
-			message.success("Icon deleted successfully");
+			message.success("Icon removed");
 		} catch (error) {
 			console.error("Failed to delete icon:", error);
 			message.error("Failed to delete icon");

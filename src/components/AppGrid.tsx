@@ -5,6 +5,7 @@ import type { RootState } from "@/store/persistence";
 import { cn } from "@/utils";
 import { openApp } from "@/utils/openApp";
 import type { DragEvent } from "react";
+import { useMemo } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 
@@ -31,10 +32,18 @@ export default function AppGrid({
 }: AppGridProps) {
 	const navigate = useNavigate();
 	const apps = useSelector((state: RootState) => state.installedApps?.apps ?? []);
-	const visibleApps = apps.filter(
-		(app) =>
-			app.showInLaunchpad !== false &&
-			(category === "All" || getAppCategory(app) === category)
+	const visibleApps = useMemo(
+		() =>
+			apps
+				.filter(
+					(app) =>
+						app.showInLaunchpad !== false &&
+						(category === "All" || getAppCategory(app) === category)
+				)
+				.sort((left, right) =>
+					left.name.localeCompare(right.name, undefined, { sensitivity: "base" })
+				),
+		[apps, category]
 	);
 	const currentApps =
 		typeof itemsPerPage === "number"
@@ -88,7 +97,7 @@ export default function AppGrid({
 								el.src = PlaceholderAppIcon;
 							}}
 							className={cn(
-								"h-16 w-16 select-none object-contain sm:h-20 sm:w-20 lg:h-24 lg:w-24",
+								"h-16 w-16 select-none rounded-[22%] object-cover sm:h-20 sm:w-20 lg:h-24 lg:w-24",
 								iconClassName
 							)}
 						/>

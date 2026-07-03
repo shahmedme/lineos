@@ -54,7 +54,7 @@ export default function ShellChrome({ isHome, children }: ShellChromeProps) {
 	return (
 		<div>
 			{children}
-			{!isHome && <DefaultAssistiveMenu />}
+			<DefaultAssistiveMenu />
 		</div>
 	);
 }

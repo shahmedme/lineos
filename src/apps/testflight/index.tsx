@@ -1,4 +1,8 @@
 import TestFlightIcon from "@/assets/img/icons/testflight.png";
+import {
+	getFaviconUrl,
+	setPublishPrefill,
+} from "@/apps/store/pages/publish/prefill";
 import { DEFAULT_IFRAME_SANDBOX } from "@/config/apps";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,9 +16,11 @@ import {
 	PanelLeftClose,
 	PanelLeftOpen,
 	Play,
+	Store,
 	Trash2,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router";
 
 dayjs.extend(relativeTime);
 
@@ -56,6 +62,7 @@ const statusCopy: Record<
 };
 
 export default function TestFlightApp() {
+	const navigate = useNavigate();
 	const [betaApps, setBetaApps] = useState<BetaApp[]>(readBetaApps);
 	const [selectedAppId, setSelectedAppId] = useState(betaApps[0]?.id ?? "");
 	const [previewAppId, setPreviewAppId] = useState("");
@@ -130,6 +137,15 @@ export default function TestFlightApp() {
 		if (previewAppId === app.id) {
 			setPreviewAppId("");
 		}
+	};
+
+	const publishBetaApp = (app: BetaApp) => {
+		setPublishPrefill({
+			name: app.name,
+			appUrl: app.url,
+			icon: getFaviconUrl(app.url),
+		});
+		navigate("/store/publish");
 	};
 
 	const previewApp =
@@ -372,6 +388,14 @@ export default function TestFlightApp() {
 											>
 												<Play className="h-4 w-4 fill-current" />
 												{statusCopy[selectedApp.status].action}
+											</button>
+											<button
+												type="button"
+												onClick={() => publishBetaApp(selectedApp)}
+												className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2.5 text-sm font-medium text-[#0a84ff] transition hover:bg-[#0a84ff]/5"
+											>
+												<Store className="h-4 w-4" />
+												Publish
 											</button>
 											<button
 												type="button"

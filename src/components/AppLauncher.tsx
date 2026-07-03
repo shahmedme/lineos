@@ -219,7 +219,7 @@ export default function AppLauncher() {
 										<img
 											src={app.icon}
 											alt={app.name}
-											className="h-10 w-10 object-contain"
+											className="h-10 w-10 rounded-[22%] object-cover"
 										/>
 									</div>
 									<div className="min-w-0 flex-1">
