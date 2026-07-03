@@ -9,59 +9,62 @@ import { Spin } from "antd";
 import { Link, useNavigate, useParams } from "react-router";
 import { useAppInstall } from "../../hooks/useAppInstall";
 import { appStoreService } from "../../services/appStoreService";
+import type { StoreApp } from "../../types/store";
+import {
+	formatAppPrice,
+	formatCategoryLabel,
+	transformAppRow,
+} from "../../utils/storeHelpers";
 
-const mockApp = {
+type AppDetailView = {
+	id: number;
+	name: string;
+	slug: string;
+	developer: string;
+	icon: string;
+	category: string;
+	subCategory?: string;
+	rating: number;
+	reviewCount: number;
+	price: string;
+	size: string;
+	ageRating: string;
+	version: string;
+	lastUpdated: string;
+	description: string;
+	screenshots: string[];
+	features: string[];
+	relatedApps: StoreApp[];
+	reviews: Array<{
+		id: string;
+		user: string;
+		avatar: string;
+		rating: number;
+		date: string;
+		content: string;
+	}>;
+};
+
+const emptyApp: AppDetailView = {
 	id: 0,
-	name: "Minecraft",
-	developer: "Mojang",
+	name: "",
+	slug: "",
+	developer: "",
 	icon: placeholderImg,
-	category: "Games",
-	subCategory: "Adventure",
-	rating: 4.8,
-	reviewCount: 2500000,
-	price: "$6.99",
-	size: "173 MB",
-	slug: "minecraft",
-	ageRating: "9+",
-	version: "1.20.0",
-	lastUpdated: "May 15, 2023",
-	description:
-		"Explore infinite worlds and build everything from the simplest of homes to the grandest of castles.",
-	screenshots: [placeholderImg, placeholderImg, placeholderImg, placeholderImg],
-	features: [
-		"Cross-platform gameplay",
-		"Regular updates with new content",
-		"Creative and Survival modes",
-		"Multiplayer support",
-		"Custom skins and texture packs",
-	],
-	relatedApps: [
-		{
-			id: "terraria",
-			name: "Terraria",
-			icon: placeholderImg,
-			category: "Games",
-			rating: 4.7,
-		},
-		{
-			id: "roblox",
-			name: "Roblox",
-			icon: placeholderImg,
-			category: "Games",
-			rating: 4.5,
-		},
-	],
-	reviews: [
-		{
-			id: "1",
-			user: "CraftMaster",
-			avatar: placeholderImg,
-			rating: 5,
-			date: "June 2, 2023",
-			content:
-				"Best game ever! I've been playing for years and it never gets old.",
-		},
-	],
+	category: "",
+	subCategory: "",
+	rating: 0,
+	reviewCount: 0,
+	price: "GET",
+	size: "—",
+	ageRating: "4+",
+	version: "1.0.0",
+	lastUpdated: "",
+	description: "",
+	screenshots: [],
+	features: [],
+	relatedApps: [],
+	reviews: [],
 };
 
 export default function AppDetailPage() {
@@ -69,8 +72,9 @@ export default function AppDetailPage() {
 	const parsedAppId = appId ? Number(appId) : null;
 	const numericAppId =
 		parsedAppId && Number.isInteger(parsedAppId) ? parsedAppId : null;
-	const [app, setApp] = useState(mockApp);
+	const [app, setApp] = useState<AppDetailView>(emptyApp);
 	const [isLoading, setIsLoading] = useState(true);
+	const [notFound, setNotFound] = useState(false);
 	const { installApp, isInstalling, isInstalled } = useAppInstall(
 		numericAppId ?? undefined
 	);
@@ -81,26 +85,69 @@ export default function AppDetailPage() {
 	}, [appId, isInstalling]);
 
 	async function fetchApp() {
-		if (!numericAppId) return;
+		if (!numericAppId) {
+			setNotFound(true);
+			setIsLoading(false);
+			return;
+		}
+
+		setIsLoading(true);
+		setNotFound(false);
 
 		try {
-			const data = await appStoreService.getAppDetails(numericAppId);
+			const [data, publishedApps] = await Promise.all([
+				appStoreService.getAppDetails(numericAppId),
+				appStoreService.getPublishedApps(),
+			]);
+
+			const storeApp = transformAppRow(data);
+			const screenshots = (data.assets ?? [])
+				.filter((asset) => asset.asset_type === "screenshot")
+				.map((asset) => asset.file_path);
+			const moderationReviews = data.reviews ?? [];
+			const relatedApps = publishedApps
+				.filter(
+					(publishedApp) =>
+						publishedApp.id !== numericAppId &&
+						publishedApp.rawCategory === data.primary_category
+				)
+				.slice(0, 4);
+
 			setApp({
-				...mockApp,
-				...data,
-				icon: data.icon_url || mockApp.icon,
-				category: data.primary_category || mockApp.category,
-				subCategory: data.subcategory || mockApp.subCategory,
-				description: data.description || mockApp.description,
-				rating: mockApp.rating,
-				reviewCount: data.reviews?.length || mockApp.reviewCount,
-				price: data.price ? `$${data.price}` : mockApp.price,
-				reviews: mockApp.reviews,
-				lastUpdated:
-					new Date(data.updated_at).toLocaleDateString() || mockApp.lastUpdated,
+				id: data.id,
+				name: data.name,
+				slug: data.slug,
+				developer: storeApp.developer,
+				icon: data.icon_url || placeholderImg,
+				category: formatCategoryLabel(data.primary_category),
+				subCategory: data.subcategory
+					? formatCategoryLabel(data.subcategory)
+					: undefined,
+				rating: 0,
+				reviewCount: moderationReviews.length,
+				price: formatAppPrice(data),
+				size: "—",
+				ageRating: data.age_rating,
+				version: "1.0.0",
+				lastUpdated: new Date(data.updated_at).toLocaleDateString(),
+				description: data.description,
+				screenshots: screenshots.length ? screenshots : [data.icon_url],
+				features: data.keywords?.length
+					? data.keywords
+					: ["Runs inside LineOS", "Optimized for iframe apps"],
+				relatedApps,
+				reviews: moderationReviews.map((review) => ({
+					id: String(review.id),
+					user: "App Review",
+					avatar: placeholderImg,
+					rating: review.status === "approved" ? 5 : 3,
+					date: new Date(review.created_at).toLocaleDateString(),
+					content: review.feedback || `Review status: ${review.status}`,
+				})),
 			});
 		} catch (error) {
 			console.error("Failed to fetch app details:", error);
+			setNotFound(true);
 		} finally {
 			setIsLoading(false);
 		}
@@ -108,6 +155,22 @@ export default function AppDetailPage() {
 
 	if (isLoading) {
 		return <div className="container max-w-7xl py-6">Loading...</div>;
+	}
+
+	if (notFound) {
+		return (
+			<div className="container max-w-7xl space-y-4 py-6">
+				<Button variant="ghost" size="sm" asChild>
+					<Link to="/store" className="flex items-center gap-1">
+						<ChevronLeft className="h-4 w-4" />
+						Back to Store
+					</Link>
+				</Button>
+				<div className="rounded-lg bg-white p-8 text-center">
+					<p className="text-muted-foreground">App not found.</p>
+				</div>
+			</div>
+		);
 	}
 
 	return (
@@ -138,29 +201,33 @@ export default function AppDetailPage() {
 					</div>
 					<div className="flex flex-wrap gap-2">
 						<Badge variant="outline">{app.category}</Badge>
-						<Badge variant="outline">{app.subCategory}</Badge>
+						{app.subCategory && (
+							<Badge variant="outline">{app.subCategory}</Badge>
+						)}
 						<Badge variant="outline">{app.ageRating}</Badge>
 					</div>
-					<div className="flex items-center gap-4">
-						<div className="flex items-center">
-							<div className="flex">
-								{[...Array(5)].map((_, i) => (
-									<Star
-										key={i}
-										className={`h-4 w-4 ${
-											i < Math.floor(app.rating)
-												? "fill-primary text-primary"
-												: "fill-muted text-muted"
-										}`}
-									/>
-								))}
+					{app.rating > 0 && (
+						<div className="flex items-center gap-4">
+							<div className="flex items-center">
+								<div className="flex">
+									{[...Array(5)].map((_, i) => (
+										<Star
+											key={i}
+											className={`h-4 w-4 ${
+												i < Math.floor(app.rating)
+													? "fill-primary text-primary"
+													: "fill-muted text-muted"
+											}`}
+										/>
+									))}
+								</div>
+								<span className="ml-2 text-sm">
+									{app.rating} ({app.reviewCount.toLocaleString()} reviews)
+								</span>
 							</div>
-							<span className="ml-2 text-sm">
-								{app.rating} ({app.reviewCount.toLocaleString()} reviews)
-							</span>
+							<div className="text-sm text-muted-foreground">{app.size}</div>
 						</div>
-						<div className="text-sm text-muted-foreground">{app.size}</div>
-					</div>
+					)}
 					<div className="flex flex-wrap gap-3 pt-2">
 						{isInstalled ? (
 							<Button
@@ -200,7 +267,7 @@ export default function AppDetailPage() {
 				<div className="flex gap-4 overflow-x-auto pb-4 snap-x">
 					{app.screenshots.map((screenshot, index) => (
 						<div
-							key={index}
+							key={`${screenshot}-${index}`}
 							className="flex-shrink-0 snap-center rounded-lg overflow-hidden"
 						>
 							<img
@@ -270,107 +337,83 @@ export default function AppDetailPage() {
 				<TabsContent value="reviews" className="space-y-6 pt-4">
 					<div className="flex items-center justify-between">
 						<h3 className="text-lg font-semibold">Ratings & Reviews</h3>
-						<Button variant="outline" size="sm">
-							Write a Review
-						</Button>
 					</div>
 
-					<div className="flex flex-col md:flex-row gap-6 items-start">
-						<div className="flex flex-col items-center p-4 border rounded-lg">
-							<span className="text-4xl font-bold">{app.rating}</span>
-							<div className="flex my-2">
-								{[...Array(5)].map((_, i) => (
-									<Star
-										key={i}
-										className={`h-4 w-4 ${
-											i < Math.floor(app.rating)
-												? "fill-primary text-primary"
-												: "fill-muted text-muted"
-										}`}
-									/>
-								))}
+					{app.reviews.length ? (
+						<div className="flex flex-col md:flex-row gap-6 items-start">
+							<div className="flex flex-col items-center p-4 border rounded-lg">
+								<span className="text-4xl font-bold">{app.rating || "—"}</span>
+								<span className="text-sm text-muted-foreground">
+									{app.reviewCount.toLocaleString()} review notes
+								</span>
 							</div>
-							<span className="text-sm text-muted-foreground">
-								{app.reviewCount.toLocaleString()} reviews
-							</span>
-						</div>
 
-						<div className="flex-grow space-y-4">
-							{app.reviews.map((review) => (
-								<div
-									key={review.id}
-									className="border rounded-lg p-4 space-y-2"
-								>
-									<div className="flex items-center gap-2">
-										<img
-											src={review.avatar || "/placeholder.svg"}
-											alt={review.user}
-											width={40}
-											height={40}
-											className="rounded-full"
-										/>
-										<div>
-											<p className="font-medium">{review.user}</p>
-											<div className="flex items-center gap-2">
-												<div className="flex">
-													{[...Array(5)].map((_, i) => (
-														<Star
-															key={i}
-															className={`h-3 w-3 ${
-																i < review.rating
-																	? "fill-primary text-primary"
-																	: "fill-muted text-muted"
-															}`}
-														/>
-													))}
-												</div>
+							<div className="flex-grow space-y-4">
+								{app.reviews.map((review) => (
+									<div
+										key={review.id}
+										className="border rounded-lg p-4 space-y-2"
+									>
+										<div className="flex items-center gap-2">
+											<img
+												src={review.avatar || "/placeholder.svg"}
+												alt={review.user}
+												width={40}
+												height={40}
+												className="rounded-full"
+											/>
+											<div>
+												<p className="font-medium">{review.user}</p>
 												<span className="text-xs text-muted-foreground">
 													{review.date}
 												</span>
 											</div>
 										</div>
+										<p>{review.content}</p>
 									</div>
-									<p>{review.content}</p>
-								</div>
-							))}
-							<Button variant="outline" className="w-full">
-								Load More Reviews
-							</Button>
+								))}
+							</div>
 						</div>
-					</div>
+					) : (
+						<div className="rounded-lg border p-8 text-center text-muted-foreground">
+							No reviews yet.
+						</div>
+					)}
 				</TabsContent>
 
 				<TabsContent value="related" className="pt-4">
 					<h3 className="text-lg font-semibold mb-4">You May Also Like</h3>
-					<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-						{app.relatedApps.map((relatedApp) => (
-							<Link
-								to={`/app/${relatedApp.id}`}
-								key={relatedApp.id}
-								className="border rounded-lg p-4 hover:bg-accent transition-colors"
-							>
-								<div className="flex items-center gap-3">
-									<img
-										src={relatedApp.icon || "/placeholder.svg"}
-										alt={relatedApp.name}
-										width={60}
-										height={60}
-										className="rounded-xl"
-									/>
-									<div>
-										<h4 className="font-medium">{relatedApp.name}</h4>
-										<p className="text-sm text-muted-foreground">
-											{relatedApp.category}
-										</p>
-										<div className="flex items-center mt-1">
-											<Star className="h-3 w-3 fill-primary text-primary" />
-											<span className="text-xs ml-1">{relatedApp.rating}</span>
+					{app.relatedApps.length ? (
+						<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+							{app.relatedApps.map((relatedApp) => (
+								<Link
+									to={`/store/app/${relatedApp.id}`}
+									key={relatedApp.id}
+									className="border rounded-lg p-4 hover:bg-accent transition-colors"
+								>
+									<div className="flex items-center gap-3">
+										<img
+											src={relatedApp.icon || "/placeholder.svg"}
+											alt={relatedApp.name}
+											width={60}
+											height={60}
+											className="rounded-xl"
+										/>
+										<div>
+											<h4 className="font-medium">{relatedApp.name}</h4>
+											<p className="text-sm text-muted-foreground">
+												{relatedApp.category}
+											</p>
 										</div>
 									</div>
-								</div>
-							</Link>
-						))}
-					</div>
+								</Link>
+							))}
+						</div>
+					) : (
+						<div className="rounded-lg border p-8 text-center text-muted-foreground">
+							No related apps yet.
+						</div>
+					)}
 				</TabsContent>
 			</Tabs>
 		</div>

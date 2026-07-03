@@ -2,12 +2,12 @@ import { useAppSelector } from "@/store/hooks";
 import { useGetProfileQuery } from "@/store/slices/profileApi";
 import { cn } from "@/utils";
 import type { ElementType } from "react";
+import { useState } from "react";
 import {
 	ChartNoAxesColumnIncreasing,
 	CircleCheckBig,
 	CopyCheck,
 	CreditCard,
-	Download,
 	FileText,
 	Gamepad2,
 	Gift,
@@ -40,7 +40,6 @@ export default function Sidebar() {
 						<NavLink to="/store" icon={Star} text="Discover" />
 						<NavLink to="/store/arcade" icon={Gamepad2} text="Arcade" />
 						<NavLink to="/store/categories" icon={Grid} text="Categories" />
-						<NavLink to="#" icon={Download} text="Updates" />
 					</div>
 					<div>
 						<div className="py-3">
@@ -104,7 +103,7 @@ const DevSection = () => {
 			<NavLink to="/store/developer/apps" icon={Monitor} text="My Apps" />
 			<NavLink to="/store/publish" icon={Wrench} text="Publish App" />
 			<NavLink to="#" icon={ChartNoAxesColumnIncreasing} text="Analytics" />
-			<NavLink to="#" icon={CircleCheckBig} text="TestFlight" />
+			<NavLink to="/testflight" icon={CircleCheckBig} text="TestFlight" />
 			<NavLink to="#" icon={FileText} text="App Review" />
 			<NavLink to="#" icon={CreditCard} text="Payments" />
 		</div>
@@ -112,11 +111,21 @@ const DevSection = () => {
 };
 
 const PromoSection = () => {
+	const [isVisible, setIsVisible] = useState(true);
+
+	if (!isVisible) {
+		return null;
+	}
+
 	return (
 		<div className="mx-4 mb-5">
 			<div className="relative overflow-hidden rounded-2xl bg-[#1d1d1f] p-4 text-white shadow-sm">
 				<div className="absolute inset-x-0 top-0 h-1 bg-[#0071e3]" />
-				<button className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full text-white/70 transition hover:bg-white/10 hover:text-white">
+				<button
+					type="button"
+					onClick={() => setIsVisible(false)}
+					className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full text-white/70 transition hover:bg-white/10 hover:text-white"
+				>
 					<span className="sr-only">Close</span>
 					<X className="h-4 w-4" />
 				</button>

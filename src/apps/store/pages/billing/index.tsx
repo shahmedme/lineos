@@ -54,126 +54,34 @@ import {
 	Search,
 	Users,
 } from "lucide-react";
-import { myApps } from "../../utils";
 
-const paymentMethods = [
-	{
-		id: 1,
-		type: "visa",
-		name: "Visa ending in 4242",
-		expiry: "09/2025",
-		isDefault: true,
-		icon: "https://1000logos.net/wp-content/uploads/2021/11/VISA-logo.png",
-	},
-	{
-		id: 2,
-		type: "mastercard",
-		name: "Mastercard ending in 5678",
-		expiry: "12/2024",
-		isDefault: false,
-		icon: "https://download.logo.wine/logo/Mastercard/Mastercard-Logo.wine.png",
-	},
-	{
-		id: 3,
-		type: "paypal",
-		name: "PayPal - user@example.com",
-		expiry: null,
-		isDefault: false,
-		icon: "https://e7.pngegg.com/pngimages/782/863/png-clipart-paypal-logo-paypal-blue-text.png",
-	},
-];
+const paymentMethods: Array<{
+	id: number;
+	type: string;
+	name: string;
+	expiry: string | null;
+	isDefault: boolean;
+	icon: string;
+}> = [];
 
-const transactions = [
-	{
-		id: "T12345",
-		date: "2023-11-15",
-		app: "Vectornator Pro",
-		amount: "$9.99",
-		type: "Subscription",
-		status: "Completed",
-		icon: myApps[0].icon,
-	},
-	{
-		id: "T12346",
-		date: "2023-11-10",
-		app: "Procreate",
-		amount: "$12.99",
-		type: "Purchase",
-		status: "Completed",
-		icon: myApps[1].icon,
-	},
-	{
-		id: "T12347",
-		date: "2023-11-05",
-		app: "Notion Premium",
-		amount: "$8.00",
-		type: "Subscription",
-		status: "Completed",
-		icon: myApps[2].icon,
-	},
-	{
-		id: "T12348",
-		date: "2023-10-28",
-		app: "Figma Mirror Pro",
-		amount: "$15.99",
-		type: "Subscription",
-		status: "Completed",
-		icon: myApps[3].icon,
-	},
-	{
-		id: "T12349",
-		date: "2023-10-15",
-		app: "App Store Gift Card",
-		amount: "$50.00",
-		type: "Reload",
-		status: "Completed",
-		icon: myApps[4].icon,
-	},
-	{
-		id: "T12350",
-		date: "2023-10-10",
-		app: "Swift Playgrounds Pro",
-		amount: "$4.99",
-		type: "In-App Purchase",
-		status: "Completed",
-		icon: myApps[5].icon,
-	},
-];
+const transactions: Array<{
+	id: string;
+	date: string;
+	app: string;
+	amount: string;
+	type: string;
+	status: string;
+	icon: string;
+}> = [];
 
-const subscriptions = [
-	{
-		id: 1,
-		name: "Vectornator Pro",
-		price: "$9.99/month",
-		renewalDate: "December 15, 2023",
-		status: "Active",
-		icon: myApps[0].icon,
-	},
-	{
-		id: 2,
-		name: "Notion Premium",
-		price: "$8.00/month",
-		renewalDate: "December 5, 2023",
-		status: "Active",
-		icon: myApps[2].icon,
-	},
-	{
-		id: 3,
-		name: "Figma Mirror Pro",
-		price: "$15.99/month",
-		renewalDate: "November 28, 2023",
-		status: "Active",
-		icon: myApps[3].icon,
-	},
-	{
-		id: 4,
-		name: "Adobe Creative Cloud",
-		price: "$52.99/month",
-		renewalDate: "Canceled",
-		status: "Expired",
-		icon: myApps[4].icon,
-	},
-];
+const subscriptions: Array<{
+	id: number;
+	name: string;
+	price: string;
+	renewalDate: string;
+	status: string;
+	icon: string;
+}> = [];
 
 export default function Billing() {
 	return (
@@ -249,7 +157,8 @@ export default function Billing() {
 				</div>
 
 				<div className="grid gap-3">
-					{paymentMethods.map((method) => (
+					{paymentMethods.length ? (
+						paymentMethods.map((method) => (
 						<Card key={method.id}>
 							<CardContent className="p-6">
 								<div className="flex justify-between items-center">
@@ -297,7 +206,14 @@ export default function Billing() {
 								</div>
 							</CardContent>
 						</Card>
-					))}
+						))
+					) : (
+						<Card>
+							<CardContent className="p-8 text-center text-sm text-gray-500">
+								No payment methods saved yet.
+							</CardContent>
+						</Card>
+					)}
 				</div>
 
 				<Card>
@@ -375,47 +291,55 @@ export default function Billing() {
 								</TableRow>
 							</TableHeader>
 							<TableBody>
-								{transactions.map((transaction) => (
-									<TableRow key={transaction.id}>
-										<TableCell>
-											<div className="font-medium">
-												{new Date(transaction.date).toLocaleDateString()}
-											</div>
-											<div className="text-xs text-gray-500">
-												ID: {transaction.id}
-											</div>
-										</TableCell>
-										<TableCell>
-											<div className="flex items-center gap-2">
-												<div className="w-8 h-8 bg-gray-100 rounded overflow-hidden">
-													<img
-														src={transaction.icon || "/placeholder.svg"}
-														alt={transaction.app}
-														width={32}
-														height={32}
-														className="object-cover"
-													/>
+								{transactions.length ? (
+									transactions.map((transaction) => (
+										<TableRow key={transaction.id}>
+											<TableCell>
+												<div className="font-medium">
+													{new Date(transaction.date).toLocaleDateString()}
 												</div>
-												<span>{transaction.app}</span>
-											</div>
-										</TableCell>
-										<TableCell>{transaction.type}</TableCell>
-										<TableCell>{transaction.amount}</TableCell>
-										<TableCell>
-											<Badge
-												variant="outline"
-												className="bg-green-50 text-green-700 border-green-200"
-											>
-												{transaction.status}
-											</Badge>
-										</TableCell>
-										<TableCell className="text-right">
-											<Button variant="ghost" size="sm">
-												<Receipt className="h-4 w-4 mr-1" /> Receipt
-											</Button>
+												<div className="text-xs text-gray-500">
+													ID: {transaction.id}
+												</div>
+											</TableCell>
+											<TableCell>
+												<div className="flex items-center gap-2">
+													<div className="w-8 h-8 bg-gray-100 rounded overflow-hidden">
+														<img
+															src={transaction.icon || "/placeholder.svg"}
+															alt={transaction.app}
+															width={32}
+															height={32}
+															className="object-cover"
+														/>
+													</div>
+													<span>{transaction.app}</span>
+												</div>
+											</TableCell>
+											<TableCell>{transaction.type}</TableCell>
+											<TableCell>{transaction.amount}</TableCell>
+											<TableCell>
+												<Badge
+													variant="outline"
+													className="bg-green-50 text-green-700 border-green-200"
+												>
+													{transaction.status}
+												</Badge>
+											</TableCell>
+											<TableCell className="text-right">
+												<Button variant="ghost" size="sm">
+													<Receipt className="h-4 w-4 mr-1" /> Receipt
+												</Button>
+											</TableCell>
+										</TableRow>
+									))
+								) : (
+									<TableRow>
+										<TableCell colSpan={6} className="py-10 text-center text-sm text-gray-500">
+											No transactions yet.
 										</TableCell>
 									</TableRow>
-								))}
+								)}
 							</TableBody>
 						</Table>
 					</CardContent>
@@ -435,9 +359,10 @@ export default function Billing() {
 				</div>
 
 				<div className="grid gap-3">
-					{subscriptions
-						.filter((sub) => sub.status === "Active")
-						.map((subscription) => (
+					{subscriptions.filter((sub) => sub.status === "Active").length ? (
+						subscriptions
+							.filter((sub) => sub.status === "Active")
+							.map((subscription) => (
 							<Card key={subscription.id}>
 								<CardContent className="p-6">
 									<div className="flex justify-between items-center">
@@ -502,7 +427,14 @@ export default function Billing() {
 									</div>
 								</CardContent>
 							</Card>
-						))}
+						))
+					) : (
+						<Card>
+							<CardContent className="p-8 text-center text-sm text-gray-500">
+								No active subscriptions.
+							</CardContent>
+						</Card>
+					)}
 				</div>
 
 				<Accordion type="single" collapsible className="w-full">

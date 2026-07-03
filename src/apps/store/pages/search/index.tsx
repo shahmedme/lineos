@@ -1,24 +1,33 @@
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { Star } from "lucide-react";
 import { useMemo } from "react";
 import { usePublishedApps } from "../../hooks/usePublishedApps";
+import { filterStoreAppsByQuery } from "../../utils/storeHelpers";
 
-export default function ArcadePage() {
+export default function SearchPage() {
 	const { apps, isLoading } = usePublishedApps();
-	const arcadeApps = useMemo(
-		() =>
-			apps.filter((app) => {
-				const category = app.rawCategory.toLowerCase();
-				return category === "games" || category.includes("game");
-			}),
-		[apps]
+	const [searchParams] = useSearchParams();
+	const query = searchParams.get("q") ?? "";
+	const results = useMemo(
+		() => filterStoreAppsByQuery(apps, query),
+		[apps, query]
 	);
 
 	if (isLoading) {
 		return (
-			<div className="p-6">
-				<h1 className="mb-4 text-2xl font-bold">Arcade</h1>
-				<p className="text-sm text-[#6e6e73]">Loading arcade apps...</p>
+			<div className="space-y-4">
+				<h2 className="text-2xl font-semibold">Search</h2>
+				<p className="text-sm text-[#6e6e73]">Searching apps...</p>
+			</div>
+		);
+	}
+
+	if (!query.trim()) {
+		return (
+			<div className="rounded-2xl bg-white p-10 text-center shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]">
+				<p className="text-sm text-[#6e6e73]">
+					Search for apps by name, category, or developer.
+				</p>
 			</div>
 		);
 	}
@@ -26,15 +35,16 @@ export default function ArcadePage() {
 	return (
 		<div className="space-y-6">
 			<div>
-				<h1 className="text-2xl font-bold">Arcade</h1>
+				<h2 className="text-2xl font-semibold">Search results</h2>
 				<p className="mt-1 text-sm text-[#6e6e73]">
-					Games and entertainment from the App Store.
+					{results.length} result{results.length === 1 ? "" : "s"} for "
+					{query}"
 				</p>
 			</div>
 
-			{arcadeApps.length ? (
+			{results.length ? (
 				<div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-					{arcadeApps.map((app) => (
+					{results.map((app) => (
 						<Link
 							key={app.id}
 							to={`/store/app/${app.id}`}
@@ -68,7 +78,7 @@ export default function ArcadePage() {
 			) : (
 				<div className="rounded-2xl bg-white p-10 text-center shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]">
 					<p className="text-sm text-[#6e6e73]">
-						No arcade games are published yet.
+						No apps matched your search.
 					</p>
 				</div>
 			)}

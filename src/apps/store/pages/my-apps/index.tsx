@@ -1,3 +1,6 @@
+import PlaceholderAppIcon from "@/assets/img/icons/placeholder.png";
+import { getAppCategory } from "@/config/appCategories";
+import { AppConfig } from "@/config/apps";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -8,41 +11,43 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AppConfig } from "@/config/apps";
 import { Grid3X3, List, Search } from "lucide-react";
+import { useMemo } from "react";
 import AppCard from "../../components/AppCard";
 import { useAppInstall } from "../../hooks/useAppInstall";
 
 export default function MyApps() {
 	const { apps } = useAppInstall();
 
-	const installedApps = apps
-		.filter((app: AppConfig) => app.id)
-		.map((app: AppConfig) => ({
-			...{
-				id: 1,
-				name: "Vectornator",
-				icon: "https://cdn-images-1.medium.com/v2/resize:fit:1200/1*7WnZLJAPmmRvVXgzzy_aFA.png",
-				developer: "Linearity GmbH",
-				category: "Graphics & Design",
-				version: "4.12.0",
-				size: "245 MB",
-				lastUpdated: "2 days ago",
-				type: "purchased",
-				status: "installed",
-			},
-			...app,
-		}));
-
-	const purchasedApps = installedApps.filter((app) => app.type === "purchased");
-	const updateAvailableApps = installedApps.filter(
-		(app) => app.status === "update-available"
+	const installedApps = useMemo(
+		() =>
+			(apps ?? [])
+				.filter((app: AppConfig) => typeof app.id === "number")
+				.map((app: AppConfig) => ({
+					id: app.id,
+					name: app.name,
+					icon:
+						typeof app.icon === "string" && app.icon.trim() !== ""
+							? app.icon
+							: PlaceholderAppIcon,
+					slug: app.slug,
+					developer: "Installed on this device",
+					category: getAppCategory(app),
+					version: "1.0.0",
+					size: "—",
+					lastUpdated: "Installed",
+					type: "purchased" as const,
+					status: "installed" as const,
+				})),
+		[apps]
 	);
+
+	const purchasedApps = installedApps;
 
 	return (
 		<Tabs defaultValue="all" className="space-y-4">
 			<div className="flex flex-col sm:flex-row justify-between gap-4">
-				<TabsList className="grid grid-cols-4 w-full sm:w-auto sm:inline-flex">
+				<TabsList className="grid grid-cols-2 w-full sm:w-auto sm:inline-flex">
 					<TabsTrigger
 						value="all"
 						className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600"
@@ -54,12 +59,6 @@ export default function MyApps() {
 						className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600"
 					>
 						Purchased
-					</TabsTrigger>
-					<TabsTrigger
-						value="updates"
-						className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600"
-					>
-						Updates
 					</TabsTrigger>
 				</TabsList>
 
@@ -104,35 +103,23 @@ export default function MyApps() {
 				{installedApps.length ? (
 					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 						{installedApps.map((app) => (
-							<AppCard key={app.id} app={app} />
+							<AppCard key={app.id ?? app.slug} app={app} />
 						))}
 					</div>
 				) : (
-					<Empty text="No apps installed" />
+					<Empty text="No App Store apps installed" />
 				)}
 			</TabsContent>
 
 			<TabsContent value="purchased" className="space-y-4">
-				{purchasedApps?.length ? (
+				{purchasedApps.length ? (
 					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 						{purchasedApps.map((app) => (
-							<AppCard key={app.id} app={app} />
+							<AppCard key={app.id ?? app.slug} app={app} />
 						))}
 					</div>
 				) : (
 					<Empty text="No purchased apps" />
-				)}
-			</TabsContent>
-
-			<TabsContent value="updates" className="space-y-4">
-				{updateAvailableApps?.length ? (
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-						{updateAvailableApps.map((app) => (
-							<AppCard key={app.id} app={app} />
-						))}
-					</div>
-				) : (
-					<Empty text="No updates available" />
 				)}
 			</TabsContent>
 		</Tabs>

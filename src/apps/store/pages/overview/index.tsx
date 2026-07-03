@@ -1,6 +1,5 @@
 import Ad from "./views/Ad";
 import Categories from "./views/Categories";
-import Featured from "./views/Featured";
 import FeaturedApps from "./views/FeaturedApps";
 import Recommended from "./views/Recommended";
 import TopApps from "./views/TopApps";
@@ -14,7 +13,6 @@ export default function OverviewPage() {
 				<Categories />
 				<Recommended />
 				<TopApps />
-				<Featured />
 			</div>
 			<div className="min-w-0 space-y-6">
 				<Trending />

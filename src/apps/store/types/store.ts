@@ -1,0 +1,23 @@
+export type StoreApp = {
+	id: number;
+	name: string;
+	slug: string;
+	icon: string;
+	description: string;
+	subtitle?: string;
+	developer: string;
+	category: string;
+	rawCategory: string;
+	subcategory?: string;
+	version: string;
+	size: string;
+	lastUpdated: string;
+	updatedAt: string;
+	type: "developed" | "purchased";
+	status: "installed" | "update-available" | "published" | "in-review" | "draft";
+	downloads: string;
+	revenue: string;
+	rating: number;
+	price: string;
+	ageRating: string;
+};

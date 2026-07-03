@@ -24,6 +24,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { themes } from "@/theme/config";
 import { useLineOSTheme } from "@/theme/provider";
 import { cn } from "@/utils";
+import type { RootState } from "@/store/persistence";
+import PlaceholderAppIcon from "@/assets/img/icons/placeholder.png";
 import {
 	Accessibility,
 	Bell,
@@ -38,7 +40,7 @@ import {
 	User,
 } from "lucide-react";
 import { useState } from "react";
-import { myApps } from "../../utils";
+import { useSelector } from "react-redux";
 import Account from "./views/Account";
 import Developer from "./views/Developer";
 import Privacy from "./views/Privacy";
@@ -47,6 +49,9 @@ import Notifications from "./views/Notifications";
 export default function Settings() {
 	const { themeId, setTheme, customTheme, saveCustomTheme } = useLineOSTheme();
 	const [customCss, setCustomCss] = useState(customTheme.css);
+	const installedApps = useSelector(
+		(state: RootState) => state.installedApps?.apps ?? []
+	);
 
 	const handleThemeFile = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.[0];
@@ -503,68 +508,46 @@ export default function Settings() {
 							</CardHeader>
 							<CardContent>
 								<div className="space-y-4">
-									<div className="flex items-center justify-between">
-										<div className="flex items-center gap-3">
-											<div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-												<img
-													src={myApps[0].icon}
-													alt="Vectornator"
-													width={40}
-													height={40}
-													className="object-cover rounded-md"
-												/>
-											</div>
-											<div>
-												<h3 className="font-medium">Vectornator</h3>
-												<p className="text-sm text-gray-500">1.2 GB</p>
-											</div>
-										</div>
-										<Button variant="outline" size="sm">
-											Manage
-										</Button>
-									</div>
+									{installedApps.length ? (
+										installedApps.map((app) => {
+											const iconSrc =
+												typeof app.icon === "string" && app.icon.trim() !== ""
+													? app.icon
+													: PlaceholderAppIcon;
 
-									<div className="flex items-center justify-between">
-										<div className="flex items-center gap-3">
-											<div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-												<img
-													src={myApps[1].icon}
-													alt="Procreate"
-													width={40}
-													height={40}
-													className="object-cover rounded-md"
-												/>
-											</div>
-											<div>
-												<h3 className="font-medium">Procreate</h3>
-												<p className="text-sm text-gray-500">3.5 GB</p>
-											</div>
-										</div>
-										<Button variant="outline" size="sm">
-											Manage
-										</Button>
-									</div>
-
-									<div className="flex items-center justify-between">
-										<div className="flex items-center gap-3">
-											<div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-												<img
-													src={myApps[2].icon}
-													alt="Notion"
-													width={40}
-													height={40}
-													className="object-cover rounded-md"
-												/>
-											</div>
-											<div>
-												<h3 className="font-medium">Notion</h3>
-												<p className="text-sm text-gray-500">850 MB</p>
-											</div>
-										</div>
-										<Button variant="outline" size="sm">
-											Manage
-										</Button>
-									</div>
+											return (
+												<div
+													key={app.slug}
+													className="flex items-center justify-between"
+												>
+													<div className="flex items-center gap-3">
+														<div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-blue-100">
+															<img
+																src={iconSrc}
+																alt={app.name}
+																width={40}
+																height={40}
+																className="h-full w-full object-cover rounded-md"
+															/>
+														</div>
+														<div>
+															<h3 className="font-medium">{app.name}</h3>
+															<p className="text-sm text-gray-500">
+																Installed app
+															</p>
+														</div>
+													</div>
+													<Button variant="outline" size="sm">
+														Manage
+													</Button>
+												</div>
+											);
+										})
+									) : (
+										<p className="text-sm text-gray-500">
+											No installed apps to show storage for yet.
+										</p>
+									)}
 								</div>
 							</CardContent>
 							<CardFooter>

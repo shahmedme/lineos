@@ -2,29 +2,10 @@ import { appStoreRepository } from "./appStoreRepository";
 import { Database } from "@/types/database";
 import { AppSubmissionForm } from "../pages/publish/types";
 import { apiRequest } from "@/lib/api";
+import type { StoreApp } from "../types/store";
+import { transformAppRow } from "../utils/storeHelpers";
 
-const transformAppData = (
-	app: Database["public"]["Tables"]["apps"]["Row"]
-) => ({
-	id: app.id,
-	name: app.name,
-	icon: app.icon_url,
-	developer: "Your Company", // You might want to get this from user profile
-	category: app.primary_category,
-	version: "1.0.0", // You might want to add version to your app model
-	size: "0 MB", // You might want to add size to your app model
-	lastUpdated: new Date(app.updated_at).toLocaleDateString(),
-	type: "developed",
-	status:
-		app.status === "approved"
-			? "published"
-			: app.status === "pending_review"
-			? "in-review"
-			: "draft",
-	downloads: "0", // You might want to add downloads to your app model
-	revenue: "$0", // You might want to add revenue to your app model
-	rating: 0, // You might want to add rating to your app model
-});
+export type { StoreApp };
 
 export const appStoreService = {
 	// App management
@@ -34,9 +15,9 @@ export const appStoreService = {
 		return appStoreRepository.createApp(appData);
 	},
 
-	async getMyApps() {
+	async getMyApps(): Promise<StoreApp[]> {
 		const data = await appStoreRepository.getAppsByUserId();
-		return data.map(transformAppData);
+		return data.map((app) => transformAppRow(app));
 	},
 
 	async getAppDetails(id: number) {
@@ -181,10 +162,10 @@ export const appStoreService = {
 		}
 	},
 
-	async getPublishedApps() {
+	async getPublishedApps(): Promise<StoreApp[]> {
 		const data = await apiRequest<Database["public"]["Tables"]["apps"]["Row"][]>(
 			"/api/apps?status=approved"
 		);
-		return data.map(transformAppData);
+		return data.map((app) => transformAppRow(app));
 	},
 };
