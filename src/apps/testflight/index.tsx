@@ -1,4 +1,5 @@
 import TestFlightIcon from "@/assets/img/icons/testflight.png";
+import { DEFAULT_IFRAME_SANDBOX } from "@/config/apps";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/utils";
@@ -321,7 +322,7 @@ export default function TestFlightApp() {
 									src={previewApp.url}
 									title={`${previewApp.name} beta preview`}
 									className="h-full w-full border-0 bg-white"
-									sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-downloads"
+									sandbox={DEFAULT_IFRAME_SANDBOX}
 									referrerPolicy="no-referrer"
 								/>
 							) : (

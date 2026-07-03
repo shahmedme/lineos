@@ -1,3 +1,7 @@
+import {
+	DEFAULT_IFRAME_ALLOW,
+	DEFAULT_IFRAME_SANDBOX,
+} from "@/config/apps";
 import { RootState, store } from "@/store/persistence";
 import {
 	addInstalledApp,
@@ -44,6 +48,8 @@ export function useAppInstall(appId?: string | number) {
 				showInDock: false,
 				showInLaunchpad: true,
 				url: data.app_url,
+				sandbox: DEFAULT_IFRAME_SANDBOX,
+				allow: DEFAULT_IFRAME_ALLOW,
 			};
 			store.dispatch(addInstalledApp(appPayload));
 			setProgress(100);

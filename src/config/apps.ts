@@ -29,6 +29,13 @@ type DevIframeApp = {
 	port?: number;
 };
 
+/** Permissive sandbox for third-party iframe apps (scripts, storage, nested frames). */
+export const DEFAULT_IFRAME_SANDBOX =
+	"allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads allow-modals allow-pointer-lock allow-presentation allow-orientation-lock allow-top-navigation-by-user-activation";
+
+export const DEFAULT_IFRAME_ALLOW =
+	"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen";
+
 export interface AppConfig {
 	id?: string | number;
 	name: string;
@@ -108,7 +115,7 @@ async function getDbApps(): Promise<AppConfig[]> {
 			subcategory: app.subcategory,
 			showInDock: false,
 			showInLaunchpad: true,
-			sandbox: "allow-same-origin allow-scripts allow-forms",
+			sandbox: DEFAULT_IFRAME_SANDBOX,
 		}));
 	} catch (error) {
 		console.warn("Failed to load apps from database", error);
@@ -164,6 +171,8 @@ function mergeDbAppConfig(
 		url: dbApp.url || app.url,
 		category: dbApp.category || app.category,
 		subcategory: dbApp.subcategory || app.subcategory,
+		sandbox: dbApp.sandbox || app.sandbox,
+		allow: dbApp.allow || app.allow,
 	};
 }
 
